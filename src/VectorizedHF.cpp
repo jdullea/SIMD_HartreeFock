@@ -3,7 +3,7 @@
 // Author      : Jon Dullea
 // Version     :
 // Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
+// Description : Interface to Libint Integral Engine: not working as of now
 //============================================================================
 
 #include <iostream>
@@ -949,13 +949,13 @@ int main(int argc, char *argv[]) {
 //	}
 
 
-	std::vector < std::vector < shell*> > integralSet(vectorLength);
+	std::vector < std::vector < shell*> > integralSet(vectorLength);        //this is what is passed to prep libint function
 	for(int i = 0; i< vectorLength; i++){
 		integralSet.push_back(std::vector < shell* >() );
 	}
 
 	std::vector < std::vector < std::vector <shell* > > > integralSets;
-	const int maxPrimComb = 3*3*3*3;
+	const int maxPrimComb = 3*3*3*3;                                         //hard coded to 81 possible combinations of basis functions; way too many. lot of wasted storage
 	std::vector < int > numInts(maxPrimComb,0);
 
 	for(int i = 0; i< maxPrimComb; i++){
@@ -1014,7 +1014,7 @@ int main(int argc, char *argv[]) {
 
 	// Sort shells
 
-	stable_sort(shells.begin(), shells.end(),[](shell x_, shell y_){return x_.getAngMo() < y_.getAngMo();});
+	stable_sort(shells.begin(), shells.end(),[](shell x_, shell y_){return x_.getAngMo() < y_.getAngMo();});    //sorts the shells based on AM
 
 	cout << "ordered am" << endl;
 
@@ -1023,7 +1023,7 @@ int main(int argc, char *argv[]) {
 	points.push_back(shell_b);
 	auto it = shells.begin();
 	for(auto i = 0; i < maxAm+1; ++i){
-		points.push_back(std::partition_point(it, shells.end(), [&](shell x_){return x_.getAngMo() == i;}));
+		points.push_back(std::partition_point(it, shells.end(), [&](shell x_){return x_.getAngMo() == i;}));   //creates itterators to the points that define the partition between the shells
 		it = points.back();
 	}
 	points.push_back(shells.end());
@@ -1033,7 +1033,7 @@ int main(int argc, char *argv[]) {
 	//	cout<<"Shell num: " << i << " with am : "<<shells[i].getAngMo()<<endl;
 	//}
 
-	std::vector <std::vector <std::vector <shell*> > > shells_by_cont;
+	std::vector <std::vector <std::vector <shell*> > > shells_by_cont;                   //used inside AM loops, shells with the same number of primitives are computed at the same time.  this stores them until there are enough to compute
 	for(int i = 0; i <maxPrimComb ; i++){
 		shells_by_cont.push_back(std::vector< std::vector <shell*> > () );
 		for(int j = 0; j< vectorLength+1; j++){
@@ -1044,13 +1044,13 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	std::vector<int> howMany;
+	std::vector<int> howMany;                         //stores how many integrals of a certain type are ready to be computed.  (i.e. n integrals with m primitive combinations)
 	for(int i = 0; i< maxPrimComb; i++){
 		howMany.push_back(0);
 	}
 
-	std::vector< std::vector <std::vector<int> > > firstBasisFuncts;
-	std::vector < std::vector < int > > s1234_degen_vec;
+	std::vector< std::vector <std::vector<int> > > firstBasisFuncts;               //vector of the first basis functions for a given shell
+	std::vector < std::vector < int > > s1234_degen_vec;                          
 	for(int i = 0; i< maxPrimComb; i++){
 		firstBasisFuncts.push_back(std::vector<std::vector<int> > () );
 		s1234_degen_vec.push_back( std::vector <int> () );
@@ -1063,8 +1063,9 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+        /* NOTE:  The termonolgy is wrong from here forth. going to fix this soon, ran out of time.  Contraction depth actually refers to number of primitive gaussians per basis function */
 
-	std::vector <int> contStride = {maxContDepth*maxContDepth*maxContDepth, maxContDepth*maxContDepth, maxContDepth, 1};
+	std::vector <int> contStride = {maxContDepth*maxContDepth*maxContDepth, maxContDepth*maxContDepth, maxContDepth, 1};  //way to index primitive combs.
 
 	double tensorInts[numbasisFunc][numbasisFunc][numbasisFunc][numbasisFunc];
 	for(int i = 0; i<numbasisFunc; i++){
@@ -1086,7 +1087,7 @@ int main(int argc, char *argv[]) {
 	std::vector<shell*> tempShell(4);
 	unsigned long count = 0;
 
-	short am1 = 0;
+	short am1 = 0;                                                                                 //loop over AM, ensure Libint ordering.  A little strange with the itterators but it works.
 	for(auto it_am1 = points[0]; it_am1 != shells.end() && am1 != maxAm+1; am1++){
 		it_am1 = points[am1];
 		auto it_am1_end = points[am1+1];
@@ -1121,12 +1122,12 @@ int main(int argc, char *argv[]) {
 
 							int numContrComb = 0;
 							int maxContComb = 0;
-							for(auto it_shell_1 = it_am1; it_shell_1 != it_am1_end; it_shell_1++){
+							for(auto it_shell_1 = it_am1; it_shell_1 != it_am1_end; it_shell_1++){                 //loop over shells ensuring that only unique combinations are hit.  
 								tempShell[0] = &(*it_shell_1);
 								const int shell_num_1 = it_shell_1->shellNum;
 								auto bf1_first = shell_to_bf[shell_num_1];
-								const int numCont1 = it_shell_1->getContDepth();
-								const int contIndex1 = (numCont1 -1) * contStride[0];
+								const int numCont1 = it_shell_1->getContDepth();                         //primitives
+								const int contIndex1 = (numCont1 -1) * contStride[0];                   //primitive stride
 
 								for(auto it_shell_2 = it_am2; it_shell_2 != it_am2_end; ++it_shell_2){
 									tempShell[1] = &(*it_shell_2);
@@ -1149,15 +1150,10 @@ int main(int argc, char *argv[]) {
 											tempShell[3] = &(*it_shell_4);
 											const int shell_num_4 = it_shell_4->shellNum;
 											auto bf4_first = shell_to_bf[shell_num_4];
-											numContrComb = numCont123 * it_shell_4->getContDepth();
+											numContrComb = numCont123 * it_shell_4->getContDepth();              //Again this is the wrong terminology
 											maxContComb = max(maxContComb, numContrComb);
 
-											int contIndex = contIndex123 + ((it_shell_4->getContDepth())-1);
-
-											//cout<<"shellNums: " << it_shell_1->shellNum <<" "<<it_shell_2->shellNum <<" "<<it_shell_3->shellNum <<" "<<it_shell_4->shellNum <<"   "<<endl;
-		//														s1->getContDepth()<<" "<<s2->getContDepth()<<" "<<s3->getContDepth()<<" "<<s4->getContDepth()<<" cont index = " <<
-		//														contIndex<<"     how many = "<< howMany[contIndex]<<endl;
-
+											int contIndex = contIndex123 + ((it_shell_4->getContDepth())-1);          //compute index based on number of primitives
 
 											const int s34_deg = (shell_num_3 == shell_num_4) ? 1.0 : 2.0;
 											const int  s12_34_deg = (shell_num_1 == shell_num_3) ? (shell_num_2 == shell_num_4 ? 1.0 : 2.0) : 2.0;
@@ -1165,14 +1161,14 @@ int main(int argc, char *argv[]) {
 
 											const int how_many = howMany[contIndex];
 											shells_by_cont[contIndex][how_many] = tempShell;
-											firstBasisFuncts[contIndex][how_many] = {bf1_first, bf2_first, bf3_first, bf4_first};  //fix this
+											firstBasisFuncts[contIndex][how_many] = {bf1_first, bf2_first, bf3_first, bf4_first};  //store shell number based on primitive combs
 											s1234_degen_vec[contIndex][how_many] = s1234_deg;
-											howMany[contIndex]++;
+											howMany[contIndex]++;  
 											++count;
 											LIBINT2_REALTYPE* prim_ints = NULL;
 											//cout<<"how many p: "<<howMany[contIndex]<<endl;  //something wrong here
 
-											if(howMany[contIndex] == vectorLength){
+											if(howMany[contIndex] == vectorLength){          //if vecotor length of them are ready to be computed do so, else keep looking
 												howMany[contIndex] = 0;
 												preplibint2<Libint_t> (Libint_, shells_by_cont[contIndex], {{am1, am2, am3, am4}});   //TODO fix the am entry could declare vector much earlier
 												if(am_tot){
@@ -1190,13 +1186,13 @@ int main(int argc, char *argv[]) {
 
 												auto ss_1 = shells_by_cont[contIndex][0];
 												auto ss_2 = shells_by_cont[contIndex][1];
-
+ 
 												if(ss_1[0]->getContDepth() != ss_2[0]->getContDepth()){cout<<"broken"<<endl;}
 												if(ss_1[1]->getContDepth() != ss_2[1]->getContDepth()){cout<<"broken"<<endl;}
 												if(ss_1[2]->getContDepth() != ss_2[2]->getContDepth()){cout<<"broken"<<endl;}
 												if(ss_1[3]->getContDepth() != ss_2[3]->getContDepth()){cout<<"broken"<<endl;}
 
-												for(auto f1 = 0, f1234 = 0; f1 != numPrim_1; f1++){
+												for(auto f1 = 0, f1234 = 0; f1 != numPrim_1; f1++){        //compute and get data out
 													for(auto f2 = 0; f2 != numPrim_2; f2++){
 														for(auto f3 = 0; f3 != numPrim_3; f3++){
 															for(auto f4 = 0; f4!=numPrim_4; f4++, f1234++){
@@ -1235,8 +1231,8 @@ int main(int argc, char *argv[]) {
 										}
 									}
 								}
-							}
-							for(int p = 0; p < maxContComb; p++){
+							}  
+							for(int p = 0; p < maxContComb; p++){                 //look at how_many.  if any elements still have integrals to be computed, do so
 								//cout<<"howMany"<<howMany[p]<<endl;
 								if(howMany[p] != 0){
 									cout<<"howMany[p] = "<<howMany[p]<<endl;
