@@ -1,0 +1,12 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/CC/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/CC/operation=append
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/CC/value=/usr/bin/clang
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/CXX/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/CXX/operation=append
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/CXX/value=/usr/bin/clang++
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/CXXFLAGS/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/CXXFLAGS/operation=append
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/CXXFLAGS/value=-std\=c++11
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/append=true
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.2031231531/appendContributed=true
